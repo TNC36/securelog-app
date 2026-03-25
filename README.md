@@ -29,9 +29,9 @@ Traditional security incident logs can be tampered with, deleted, or manipulated
 
 | Name | Role | Contributions |
 |------|------|---------------|
-| **Ayushi Pethani** | Frontend Developer & UI/UX Designer | Designed the 3D interface, implemented responsive design, and created the interactive dashboard |
-| **Tanishk Chandel** | Blockchain Developer & Smart Contract Engineer | Developed and deployed the Solidity smart contract on Avalanche Fuji, implemented NFT badge system |
-| **Tejas Goswami** | Full Stack & Web3 Integrator | Integrated Core Wallet, implemented analytics dashboard, and deployed to Vercel |
+| **Tejas Goswami** | Frontend Developer & UI/UX Designer | Designed the 3D interface, implemented responsive design, and created the interactive dashboard |
+| **Tanishk Chandel** | Blockchain Developer & Smart Contract Engineer, Web3 Integrator | Developed and deployed the Solidity smart contract on Avalanche Fuji, implemented NFT badge system, Integrated Core Wallet, |
+| **Ayushi Pethani** | Full Stack | implemented analytics dashboard, and deployed to Vercel |
 
 ---
 
