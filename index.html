@@ -6,6 +6,7 @@
     <title>SecureLog - Blockchain Security Incident Management</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2-fix/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,6 +14,7 @@
             box-sizing: border-box;
         }
 
+        /* Theme Variables */
         :root {
             --bg-dark: #0f172a;
             --bg-card: #1e293b;
@@ -23,17 +25,33 @@
             --success: #4ade80;
             --error: #ff6b6b;
             --warning: #fbbf24;
+            --border-color: rgba(249, 115, 22, 0.3);
+        }
+
+        body[data-theme="dark"] {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border-color: rgba(249, 115, 22, 0.3);
+        }
+
+        body[data-theme="light"] {
+            --bg-dark: #f1f5f9;
+            --bg-card: #ffffff;
+            --text: #0f172a;
+            --text-muted: #475569;
+            --border-color: rgba(249, 115, 22, 0.5);
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: var(--bg-dark);
             color: var(--text);
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             overflow-x: hidden;
         }
 
-        /* 3D Background Container */
         #canvas-container {
             position: fixed;
             top: 0;
@@ -49,47 +67,6 @@
             z-index: 1;
         }
 
-        /* Background Selector */
-        .bg-selector {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 200;
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 10px 15px;
-            border-radius: 50px;
-            display: flex;
-            gap: 8px;
-            border: 1px solid rgba(249, 115, 22, 0.5);
-            cursor: pointer;
-        }
-        
-        .bg-option {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-        
-        .bg-option:hover {
-            transform: scale(1.1);
-        }
-        
-        .bg-option.active {
-            border-color: #f97316;
-            transform: scale(1.1);
-        }
-        
-        .bg-option[data-bg="1"] { background: linear-gradient(135deg, #f97316, #ea580c); }
-        .bg-option[data-bg="2"] { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
-        .bg-option[data-bg="3"] { background: linear-gradient(135deg, #8b5cf6, #ec489a); }
-        .bg-option[data-bg="4"] { background: linear-gradient(135deg, #10b981, #14b8a6); }
-        .bg-option[data-bg="5"] { background: linear-gradient(135deg, #ef4444, #f97316); }
-
-        /* Navigation */
         .navbar {
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(10px);
@@ -97,7 +74,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 1px solid rgba(249, 115, 22, 0.3);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .nav-container {
@@ -155,7 +132,7 @@
             backdrop-filter: blur(10px);
             border-radius: 30px;
             margin-bottom: 2rem;
-            border: 1px solid rgba(249, 115, 22, 0.3);
+            border: 1px solid var(--border-color);
         }
 
         .hero h1 {
@@ -166,13 +143,19 @@
             -webkit-text-fill-color: transparent;
         }
 
+        body[data-theme="light"] .hero h1 {
+            background: linear-gradient(135deg, #0f172a, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
         .card {
             background: var(--bg-card);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
-            border: 1px solid rgba(249, 115, 22, 0.3);
+            border: 1px solid var(--border-color);
             transition: all 0.3s;
         }
 
@@ -193,8 +176,12 @@
             border-radius: 15px;
             padding: 1.2rem;
             text-align: center;
-            border: 1px solid rgba(249, 115, 22, 0.3);
+            border: 1px solid var(--border-color);
             transition: all 0.3s;
+        }
+
+        body[data-theme="light"] .stat-card {
+            background: rgba(241, 245, 249, 0.9);
         }
 
         .stat-card:hover {
@@ -292,6 +279,7 @@
             border-radius: 20px;
             cursor: pointer;
             border: 1px solid var(--primary);
+            color: var(--text);
         }
 
         .toast {
@@ -304,10 +292,10 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             z-index: 1000;
-            animation: slideIn 0.3s ease;
+            animation: slideInToast 0.3s ease;
         }
 
-        @keyframes slideIn {
+        @keyframes slideInToast {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
@@ -326,6 +314,11 @@
             to { opacity: 1; }
         }
 
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
         footer {
             text-align: center;
             margin-top: 3rem;
@@ -340,6 +333,81 @@
             border-radius: 40px;
             cursor: pointer;
             border: 1px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        /* Contract Address Card Styles */
+        .contract-card {
+            background: linear-gradient(135deg, var(--bg-dark), var(--bg-card));
+            border: 2px solid var(--primary);
+        }
+
+        .address-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .address-box {
+            background: var(--bg-dark);
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 1rem;
+            word-break: break-all;
+            text-align: center;
+            border: 1px solid var(--primary);
+            display: inline-block;
+        }
+
+        .qr-container {
+            text-align: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 16px;
+            display: inline-block;
+        }
+
+        .qr-container canvas, .qr-container img {
+            width: 120px;
+            height: 120px;
+        }
+
+        .view-on-explorer {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .view-on-explorer:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(249, 115, 22, 0.4);
+        }
+
+        .contract-badge {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            display: inline-block;
+            margin-bottom: 10px;
         }
 
         @media (max-width: 768px) {
@@ -349,24 +417,20 @@
             .hero h1 {
                 font-size: 1.5rem;
             }
+            .nav-links {
+                justify-content: center;
+            }
+            .address-box {
+                font-size: 0.7rem;
+                padding: 8px 12px;
+            }
         }
     </style>
 </head>
-<body>
-    <!-- 3D Canvas Container -->
+<body data-theme="dark">
     <div id="canvas-container"></div>
-    
-    <!-- Background Selector -->
-    <div class="bg-selector">
-        <div class="bg-option active" data-bg="1" onclick="changeBackground(1)" title="Floating Cubes"></div>
-        <div class="bg-option" data-bg="2" onclick="changeBackground(2)" title="Particle Galaxy"></div>
-        <div class="bg-option" data-bg="3" onclick="changeBackground(3)" title="Rotating Rings"></div>
-        <div class="bg-option" data-bg="4" onclick="changeBackground(4)" title="Blockchain Network"></div>
-        <div class="bg-option" data-bg="5" onclick="changeBackground(5)" title="Aurora Waves"></div>
-    </div>
 
     <div class="content">
-        <!-- Navigation -->
         <div class="navbar">
             <div class="nav-container">
                 <div class="logo">
@@ -374,20 +438,21 @@
                     <span>SecureLog</span>
                 </div>
                 <div class="nav-links">
-                    <a onclick="showSection('home')"><i class="ri-home-line"></i> Home</a>
-                    <a onclick="showSection('app')"><i class="ri-apps-line"></i> App</a>
-                    <a onclick="showSection('analytics')"><i class="ri-bar-chart-line"></i> Analytics</a>
-                    <a onclick="showSection('badges')"><i class="ri-medal-line"></i> Badges</a>
-                    <a onclick="showSection('about')"><i class="ri-information-line"></i> About</a>
+                    <a id="navHome" onclick="showSection('home')"><i class="ri-home-line"></i> Home</a>
+                    <a id="navApp" onclick="showSection('app')"><i class="ri-apps-line"></i> App</a>
+                    <a id="navAnalytics" onclick="showSection('analytics')"><i class="ri-bar-chart-line"></i> Analytics</a>
+                    <a id="navBadges" onclick="showSection('badges')"><i class="ri-medal-line"></i> Badges</a>
+                    <a id="navAbout" onclick="showSection('about')"><i class="ri-information-line"></i> About</a>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <select id="languageSelect" class="language-selector" onchange="changeLanguage(this.value)">
+                    <select id="languageSelect" class="language-selector">
                         <option value="en">🇺🇸 English</option>
                         <option value="es">🇪🇸 Español</option>
                         <option value="hi">🇮🇳 हिंदी</option>
                     </select>
                     <div class="theme-toggle" onclick="toggleTheme()">
                         <i class="ri-sun-line"></i>
+                        <span id="themeText">Light</span>
                     </div>
                 </div>
             </div>
@@ -398,39 +463,66 @@
             <div id="home" class="section active">
                 <div class="hero">
                     <div style="background: var(--primary); display: inline-block; padding: 5px 15px; border-radius: 40px; margin-bottom: 1rem; font-size: 0.8rem;">⚡ Avalanche Fuji Testnet</div>
-                    <h1>🔒 SecureLog Enterprise</h1>
-                    <p>Blockchain-Powered Security Incident Management with NFT Rewards</p>
+                    <h1 id="homeTitle">🔒 SecureLog Enterprise</h1>
+                    <p id="homeSubtitle">Blockchain-Powered Security Incident Management with NFT Rewards</p>
                 </div>
 
                 <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-number">🔐</div><h3>Immutable</h3><p>Cannot be altered</p></div>
-                    <div class="stat-card"><div class="stat-number">🌍</div><h3>Decentralized</h3><p>No single point of failure</p></div>
-                    <div class="stat-card"><div class="stat-number">⏱️</div><h3>Timestamped</h3><p>Proven timeline</p></div>
-                    <div class="stat-card"><div class="stat-number">🏆</div><h3>NFT Badges</h3><p>Rewards for top reporters</p></div>
+                    <div class="stat-card"><div class="stat-number">🔐</div><h3 id="feature1Title">Immutable</h3><p id="feature1Desc">Cannot be altered</p></div>
+                    <div class="stat-card"><div class="stat-number">🌍</div><h3 id="feature2Title">Decentralized</h3><p id="feature2Desc">No single point of failure</p></div>
+                    <div class="stat-card"><div class="stat-number">⏱️</div><h3 id="feature3Title">Timestamped</h3><p id="feature3Desc">Proven timeline</p></div>
+                    <div class="stat-card"><div class="stat-number">🏆</div><h3 id="feature4Title">NFT Badges</h3><p id="feature4Desc">Rewards for top reporters</p></div>
                 </div>
 
                 <div class="card">
-                    <h2><i class="ri-flashlight-line"></i> Why Blockchain for Security?</h2>
-                    <p style="margin-top: 1rem; line-height: 1.6;">Traditional logs can be tampered with. Blockchain ensures every incident is permanently recorded with cryptographic proof. Report critical incidents and earn NFT badges!</p>
+                    <h2 id="whyTitle"><i class="ri-flashlight-line"></i> Why Blockchain for Security?</h2>
+                    <p id="whyText" style="margin-top: 1rem; line-height: 1.6;">Traditional logs can be tampered with. Blockchain ensures every incident is permanently recorded with cryptographic proof. Report critical incidents and earn NFT badges!</p>
+                </div>
+
+                <!-- Contract Address Card on Home Page -->
+                <div class="card contract-card">
+                    <div style="text-align: center;">
+                        <span class="contract-badge"><i class="ri-link"></i> VERIFIED CONTRACT</span>
+                        <h3><i class="ri-file-code-line"></i> Smart Contract Address</h3>
+                        <div class="address-container">
+                            <div class="address-box" id="contractAddressDisplay">
+                                0x003032948C69A055436038066D448C442049A2DA
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                                <button onclick="copyContractAddress()" class="secondary"><i class="ri-copy-line"></i> Copy Address</button>
+                                <a href="https://testnet.snowtrace.io/address/0x003032948C69A055436038066D448C442049A2DA" target="_blank" class="view-on-explorer">
+                                    <i class="ri-external-link-line"></i> View on Snowtrace
+                                </a>
+                            </div>
+                            <div style="margin-top: 1rem;">
+                                <div id="contractQR" style="display: inline-block; background: white; padding: 10px; border-radius: 16px;"></div>
+                                <p style="font-size: 0.7rem; margin-top: 5px;">Scan to verify on blockchain</p>
+                            </div>
+                        </div>
+                        <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+                            <i class="ri-shield-check-line"></i> This contract is deployed on Avalanche Fuji Testnet.<br>
+                            Anyone can verify every incident on the blockchain explorer!
+                        </p>
+                    </div>
                 </div>
             </div>
 
             <!-- App Section -->
             <div id="app" class="section">
                 <div class="hero">
-                    <h1>Security Incident Log</h1>
-                    <p>Record and track security incidents on the blockchain</p>
+                    <h1 id="appTitle">Security Incident Log</h1>
+                    <p id="appSubtitle">Record and track security incidents on the blockchain</p>
                 </div>
 
                 <div class="card">
-                    <h2><i class="ri-wallet-line"></i> Connect Wallet</h2>
-                    <button id="connectBtn"><i class="ri-link"></i> Connect Core Wallet</button>
+                    <h2 id="connectTitle"><i class="ri-wallet-line"></i> Connect Wallet</h2>
+                    <button id="connectBtn"><i class="ri-link"></i> <span id="connectBtnText">Connect Core Wallet</span></button>
                     <div id="accountInfo" style="margin-top: 10px; font-family: monospace;"></div>
                     <div id="errorMsg" style="color: var(--error); margin-top: 10px;"></div>
                 </div>
 
                 <div class="card" id="reportCard" style="display: none;">
-                    <h2><i class="ri-alert-line"></i> Report Incident</h2>
+                    <h2 id="reportTitle"><i class="ri-alert-line"></i> Report Incident</h2>
                     <div class="form-row">
                         <select id="severitySelect">
                             <option value="Critical">🔴 Critical</option>
@@ -451,38 +543,38 @@
                     
                     <div style="border: 2px dashed var(--primary); border-radius: 12px; padding: 1rem; margin: 1rem 0; text-align: center;">
                         <input type="file" id="fileInput" accept="image/*,.pdf,.txt" style="display: none;">
-                        <button type="button" onclick="document.getElementById('fileInput').click()" class="secondary"><i class="ri-cloud-upload-line"></i> Upload Evidence</button>
+                        <button type="button" onclick="document.getElementById('fileInput').click()" class="secondary"><i class="ri-cloud-upload-line"></i> <span id="uploadBtnText">Upload Evidence</span></button>
                         <div id="uploadStatus" style="font-size: 0.8rem; margin-top: 5px;"></div>
                     </div>
                     
-                    <button id="reportBtn"><i class="ri-send-plane-line"></i> SUBMIT INCIDENT</button>
+                    <button id="reportBtn"><i class="ri-send-plane-line"></i> <span id="submitBtnText">SUBMIT INCIDENT</span></button>
                     <div id="txStatus" class="status"></div>
                 </div>
 
                 <div class="card">
-                    <h2><i class="ri-list-check-2"></i> Incident Log <span id="incidentCount"></span></h2>
+                    <h2 id="logTitle"><i class="ri-list-check-2"></i> Incident Log <span id="incidentCount"></span></h2>
                     <div id="incidentsList"><p><i class="ri-wallet-line"></i> Connect wallet to view incidents</p></div>
-                    <button id="refreshBtn"><i class="ri-refresh-line"></i> Refresh</button>
+                    <button id="refreshBtn"><i class="ri-refresh-line"></i> <span id="refreshBtnText">Refresh</span></button>
                 </div>
             </div>
 
             <!-- Analytics Section -->
             <div id="analytics" class="section">
                 <div class="hero">
-                    <h1><i class="ri-bar-chart-2-line"></i> Analytics Dashboard</h1>
-                    <p>Real-time statistics and insights</p>
+                    <h1 id="analyticsTitle"><i class="ri-bar-chart-2-line"></i> Analytics Dashboard</h1>
+                    <p id="analyticsSubtitle">Real-time statistics and insights</p>
                 </div>
                 <div class="stats-grid" id="analyticsStats">
-                    <div class="stat-card"><div class="stat-number" id="totalIncidents">0</div><h3>Total Incidents</h3></div>
-                    <div class="stat-card"><div class="stat-number" id="criticalCount">0</div><h3>Critical</h3></div>
-                    <div class="stat-card"><div class="stat-number" id="highCount">0</div><h3>High</h3></div>
-                    <div class="stat-card"><div class="stat-number" id="uniqueReporters">0</div><h3>Unique Reporters</h3></div>
+                    <div class="stat-card"><div class="stat-number" id="totalIncidents">0</div><h3 id="totalLabel">Total Incidents</h3></div>
+                    <div class="stat-card"><div class="stat-number" id="criticalCount">0</div><h3 id="criticalLabel">Critical</h3></div>
+                    <div class="stat-card"><div class="stat-number" id="highCount">0</div><h3 id="highLabel">High</h3></div>
+                    <div class="stat-card"><div class="stat-number" id="uniqueReporters">0</div><h3 id="uniqueLabel">Unique Reporters</h3></div>
                 </div>
                 <div class="card">
                     <canvas id="incidentChart" width="400" height="200"></canvas>
                 </div>
                 <div class="card">
-                    <h3>🏆 Top Reporters</h3>
+                    <h3 id="topReportersTitle">🏆 Top Reporters</h3>
                     <div id="topReporters"></div>
                 </div>
             </div>
@@ -490,31 +582,31 @@
             <!-- Badges Section -->
             <div id="badges" class="section">
                 <div class="hero">
-                    <h1><i class="ri-medal-line"></i> NFT Badges</h1>
-                    <p>Earn badges by reporting critical security incidents!</p>
+                    <h1 id="badgesTitle"><i class="ri-medal-line"></i> NFT Badges</h1>
+                    <p id="badgesSubtitle">Earn badges by reporting critical security incidents!</p>
                 </div>
                 <div class="card" id="badgesInfo">
-                    <h3>🏅 Available Badges</h3>
+                    <h3 id="availableBadgesTitle">🏅 Available Badges</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
                         <div style="text-align: center; padding: 1rem; background: var(--bg-dark); border-radius: 12px;">
                             <div style="font-size: 3rem;">🥉</div>
-                            <h4>Bronze Guardian</h4>
-                            <p>Report 1 critical incident</p>
+                            <h4 id="bronzeTitle">Bronze Guardian</h4>
+                            <p id="bronzeDesc">Report 1 critical incident</p>
                         </div>
                         <div style="text-align: center; padding: 1rem; background: var(--bg-dark); border-radius: 12px;">
                             <div style="font-size: 3rem;">🥈</div>
-                            <h4>Silver Sentinel</h4>
-                            <p>Report 3 critical incidents</p>
+                            <h4 id="silverTitle">Silver Sentinel</h4>
+                            <p id="silverDesc">Report 3 critical incidents</p>
                         </div>
                         <div style="text-align: center; padding: 1rem; background: var(--bg-dark); border-radius: 12px;">
                             <div style="font-size: 3rem;">🥇</div>
-                            <h4>Gold Guardian</h4>
-                            <p>Report 5 critical incidents</p>
+                            <h4 id="goldTitle">Gold Guardian</h4>
+                            <p id="goldDesc">Report 5 critical incidents</p>
                         </div>
                     </div>
                 </div>
                 <div class="card" id="myBadges">
-                    <h3>✨ Your Badges</h3>
+                    <h3 id="yourBadgesTitle">✨ Your Badges</h3>
                     <p id="badgeStatus">Connect wallet to view your badges</p>
                 </div>
             </div>
@@ -522,31 +614,46 @@
             <!-- About Section -->
             <div id="about" class="section">
                 <div class="hero">
-                    <h1><i class="ri-information-line"></i> About SecureLog</h1>
-                    <p>Built for Hackathon | Web3 Security Innovation</p>
+                    <h1 id="aboutTitle"><i class="ri-information-line"></i> About SecureLog</h1>
+                    <p id="aboutSubtitle">Built for Hackathon | Web3 Security Innovation</p>
                 </div>
                 <div class="card">
-                    <h3>🛠️ Technology Stack</h3>
-                    <p>✅ Avalanche Fuji Testnet | ✅ Solidity Smart Contract | ✅ Core Wallet | ✅ 5 Stunning 3D Backgrounds | ✅ ethers.js</p>
+                    <h3 id="techTitle">🛠️ Technology Stack</h3>
+                    <p id="techText">✅ Avalanche Fuji Testnet | ✅ Solidity Smart Contract | ✅ Core Wallet | ✅ 3D Background | ✅ ethers.js</p>
                 </div>
                 <div class="card">
-                    <h3>📞 Features</h3>
-                    <p>✅ Multi-Language Support | ✅ NFT Badge System | ✅ File Evidence Upload | ✅ Real-time Analytics | ✅ Dark/Light Mode | ✅ 5 Interactive 3D Backgrounds</p>
+                    <h3 id="featuresTitle">📞 Features</h3>
+                    <p id="featuresText">✅ Multi-Language Support | ✅ NFT Badge System | ✅ File Evidence Upload | ✅ Real-time Analytics | ✅ Dark/Light Mode | ✅ 3D Floating Cubes Background | ✅ QR Code for Contract Verification</p>
                 </div>
                 <div class="card">
-                    <h3>🔗 Contract Address</h3>
-                    <code id="contractAddr" style="background: var(--bg-dark); padding: 8px; display: block; border-radius: 8px; word-break: break-all;">0x003032948C69A055436038066D448C442049A2DA</code>
-                    <button onclick="copyAddress()" class="secondary" style="margin-top: 10px;"><i class="ri-copy-line"></i> Copy Address</button>
+                    <h3 id="contractTitle">🔗 Smart Contract</h3>
+                    <div style="text-align: center;">
+                        <div class="address-box" style="font-size: 0.8rem; word-break: break-all;">
+                            0x003032948C69A055436038066D448C442049A2DA
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <div id="aboutQR" style="display: inline-block; background: white; padding: 10px; border-radius: 16px;"></div>
+                        </div>
+                        <button onclick="copyContractAddress()" class="secondary" style="margin-top: 10px;"><i class="ri-copy-line"></i> <span id="copyBtnText">Copy Address</span></button>
+                        <a href="https://testnet.snowtrace.io/address/0x003032948C69A055436038066D448C442049A2DA" target="_blank" class="view-on-explorer" style="margin-top: 10px; display: inline-flex;">
+                            <i class="ri-external-link-line"></i> View on Snowtrace
+                        </a>
+                        <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+                            <i class="ri-shield-check-line"></i> All incidents are permanently recorded on the Avalanche Fuji blockchain.<br>
+                            Scan the QR code to verify the contract and view all transactions!
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <footer>
-                🔐 SecureLog | Built on Avalanche Fuji | 5 Stunning 3D Backgrounds | Click bottom right to change!
+            <footer id="footerText">
+                🔐 SecureLog | Built on Avalanche Fuji | Immutable Blockchain Security Logs | Report Incidents & Earn NFT Badges
             </footer>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2-fix/qrcode.min.js"></script>
     <script type="importmap">
         {
             "imports": {
@@ -558,273 +665,84 @@
     <script type="module">
         import * as THREE from 'three';
         
-        let scene, camera, renderer, currentBackground = 1;
-        let activeObjects = [];
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = null;
+        scene.fog = new THREE.FogExp2(0x0f172a, 0.008);
         
-        function initThree() {
-            const container = document.getElementById('canvas-container');
-            scene = new THREE.Scene();
-            scene.background = null;
-            scene.fog = new THREE.FogExp2(0x0f172a, 0.008);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 2, 8);
+        camera.lookAt(0, 0, 0);
+        
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0);
+        container.appendChild(renderer.domElement);
+        
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+        
+        const cubes = [];
+        const colors = [0xf97316, 0xea580c, 0xff8c42, 0xff6b35, 0xf4a261];
+        
+        for (let i = 0; i < 40; i++) {
+            const size = 0.15 + Math.random() * 0.25;
+            const geometry = new THREE.BoxGeometry(size, size, size);
+            const material = new THREE.MeshStandardMaterial({
+                color: colors[Math.floor(Math.random() * colors.length)],
+                metalness: 0.7,
+                roughness: 0.3,
+                emissive: 0x442200,
+                emissiveIntensity: 0.2
+            });
+            const cube = new THREE.Mesh(geometry, material);
             
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 2, 8);
+            cube.position.x = (Math.random() - 0.5) * 14;
+            cube.position.y = (Math.random() - 0.5) * 10;
+            cube.position.z = (Math.random() - 0.5) * 15 - 5;
+            
+            cube.userData = {
+                speedX: (Math.random() - 0.5) * 0.008,
+                speedY: (Math.random() - 0.5) * 0.008,
+                rotSpeed: 0.005 + Math.random() * 0.01
+            };
+            
+            cubes.push(cube);
+            scene.add(cube);
+        }
+        
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 800;
+        const posArray = new Float32Array(particlesCount * 3);
+        for (let i = 0; i < particlesCount * 3; i += 3) {
+            posArray[i] = (Math.random() - 0.5) * 20;
+            posArray[i+1] = (Math.random() - 0.5) * 15;
+            posArray[i+2] = (Math.random() - 0.5) * 15 - 5;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({ color: 0xf97316, size: 0.03, transparent: true, opacity: 0.4 });
+        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particles);
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            cubes.forEach(cube => {
+                cube.position.x += cube.userData.speedX;
+                cube.position.y += cube.userData.speedY;
+                cube.rotation.x += cube.userData.rotSpeed;
+                cube.rotation.y += cube.userData.rotSpeed;
+                if (Math.abs(cube.position.x) > 8) cube.userData.speedX *= -1;
+                if (Math.abs(cube.position.y) > 6) cube.userData.speedY *= -1;
+            });
+            particles.rotation.y += 0.001;
+            particles.rotation.x += 0.0005;
             camera.lookAt(0, 0, 0);
-            
-            renderer = new THREE.WebGLRenderer({ alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setClearColor(0x000000, 0);
-            container.appendChild(renderer.domElement);
-            
-            // Add ambient light
-            const ambientLight = new THREE.AmbientLight(0x404040);
-            scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-            directionalLight.position.set(1, 1, 1);
-            scene.add(directionalLight);
-            
-            startAnimation();
+            renderer.render(scene, camera);
         }
-        
-        function clearBackground() {
-            activeObjects.forEach(obj => {
-                if (obj.parent) scene.remove(obj);
-                if (obj.geometry) obj.geometry.dispose();
-                if (obj.material) obj.material.dispose();
-            });
-            activeObjects = [];
-        }
-        
-        // BACKGROUND 1: Floating Blockchain Cubes
-        function background1() {
-            const cubes = [];
-            const colors = [0xf97316, 0xea580c, 0xff8c42, 0xff6b35, 0xf4a261];
-            
-            for (let i = 0; i < 30; i++) {
-                const size = 0.2 + Math.random() * 0.3;
-                const geometry = new THREE.BoxGeometry(size, size, size);
-                const material = new THREE.MeshStandardMaterial({
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    metalness: 0.7,
-                    roughness: 0.3,
-                    emissive: 0x442200,
-                    emissiveIntensity: 0.2
-                });
-                const cube = new THREE.Mesh(geometry, material);
-                
-                cube.position.x = (Math.random() - 0.5) * 15;
-                cube.position.y = (Math.random() - 0.5) * 10;
-                cube.position.z = (Math.random() - 0.5) * 15 - 5;
-                
-                cube.userData = {
-                    speedX: (Math.random() - 0.5) * 0.01,
-                    speedY: (Math.random() - 0.5) * 0.01,
-                    rotSpeed: 0.005 + Math.random() * 0.01
-                };
-                
-                cubes.push(cube);
-                scene.add(cube);
-                activeObjects.push(cube);
-            }
-            
-            function animate() {
-                cubes.forEach(cube => {
-                    cube.position.x += cube.userData.speedX;
-                    cube.position.y += cube.userData.speedY;
-                    cube.rotation.x += cube.userData.rotSpeed;
-                    cube.rotation.y += cube.userData.rotSpeed;
-                    
-                    if (Math.abs(cube.position.x) > 8) cube.userData.speedX *= -1;
-                    if (Math.abs(cube.position.y) > 6) cube.userData.speedY *= -1;
-                });
-            }
-            return animate;
-        }
-        
-        // BACKGROUND 2: Particle Galaxy
-        function background2() {
-            const particlesGeometry = new THREE.BufferGeometry();
-            const particlesCount = 2000;
-            const posArray = new Float32Array(particlesCount * 3);
-            const colorArray = new Float32Array(particlesCount * 3);
-            
-            for (let i = 0; i < particlesCount; i++) {
-                const radius = 5 + Math.random() * 3;
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.acos(2 * Math.random() - 1);
-                
-                posArray[i*3] = radius * Math.sin(phi) * Math.cos(theta);
-                posArray[i*3+1] = radius * Math.sin(phi) * Math.sin(theta);
-                posArray[i*3+2] = radius * Math.cos(phi);
-                
-                colorArray[i*3] = 0.9 + Math.random() * 0.1;
-                colorArray[i*3+1] = 0.5 + Math.random() * 0.3;
-                colorArray[i*3+2] = 0.2 + Math.random() * 0.3;
-            }
-            
-            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-            particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
-            
-            const particlesMaterial = new THREE.PointsMaterial({ size: 0.05, vertexColors: true, transparent: true, opacity: 0.8 });
-            const particles = new THREE.Points(particlesGeometry, particlesMaterial);
-            scene.add(particles);
-            activeObjects.push(particles);
-            
-            function animate() {
-                particles.rotation.y += 0.002;
-                particles.rotation.x += 0.001;
-            }
-            return animate;
-        }
-        
-        // BACKGROUND 3: Rotating Rings
-        function background3() {
-            const rings = [];
-            const colors = [0xf97316, 0xea580c, 0xff8c42, 0xff6b35];
-            
-            for (let i = 0; i < 4; i++) {
-                const geometry = new THREE.TorusGeometry(2 + i * 0.5, 0.05, 64, 200);
-                const material = new THREE.MeshStandardMaterial({ color: colors[i % colors.length], metalness: 0.8, roughness: 0.2, emissive: 0x442200 });
-                const ring = new THREE.Mesh(geometry, material);
-                ring.rotation.x = Math.PI / 2;
-                ring.rotation.z = i * Math.PI / 4;
-                scene.add(ring);
-                rings.push(ring);
-                activeObjects.push(ring);
-            }
-            
-            function animate() {
-                rings.forEach((ring, i) => {
-                    ring.rotation.z += 0.005;
-                    ring.rotation.x += 0.003;
-                });
-            }
-            return animate;
-        }
-        
-        // BACKGROUND 4: Blockchain Network (Nodes & Connections)
-        function background4() {
-            const nodes = [];
-            const connections = [];
-            
-            for (let i = 0; i < 50; i++) {
-                const geometry = new THREE.SphereGeometry(0.08, 16, 16);
-                const material = new THREE.MeshStandardMaterial({ color: 0xf97316, emissive: 0x442200 });
-                const node = new THREE.Mesh(geometry, material);
-                node.position.x = (Math.random() - 0.5) * 12;
-                node.position.y = (Math.random() - 0.5) * 8;
-                node.position.z = (Math.random() - 0.5) * 10;
-                scene.add(node);
-                nodes.push(node);
-                activeObjects.push(node);
-            }
-            
-            for (let i = 0; i < nodes.length; i++) {
-                for (let j = i + 1; j < nodes.length; j++) {
-                    const dist = nodes[i].position.distanceTo(nodes[j].position);
-                    if (dist < 1.5) {
-                        const points = [nodes[i].position.clone(), nodes[j].position.clone()];
-                        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                        const material = new THREE.LineBasicMaterial({ color: 0xf97316, transparent: true, opacity: 0.3 });
-                        const line = new THREE.Line(geometry, material);
-                        scene.add(line);
-                        connections.push(line);
-                        activeObjects.push(line);
-                    }
-                }
-            }
-            
-            function animate() {
-                nodes.forEach(node => {
-                    node.position.x += (Math.random() - 0.5) * 0.005;
-                    node.position.y += (Math.random() - 0.5) * 0.005;
-                });
-            }
-            return animate;
-        }
-        
-        // BACKGROUND 5: Aurora Waves
-        function background5() {
-            const width = 30, height = 20;
-            const geometry = new THREE.PlaneGeometry(width, height, 50, 50);
-            const material = new THREE.MeshStandardMaterial({ color: 0xf97316, wireframe: true, transparent: true, opacity: 0.3, emissive: 0x442200 });
-            const plane = new THREE.Mesh(geometry, material);
-            plane.rotation.x = -Math.PI / 2;
-            plane.position.y = -2;
-            scene.add(plane);
-            activeObjects.push(plane);
-            
-            const particles = new THREE.BufferGeometry();
-            const count = 800;
-            const positions = new Float32Array(count * 3);
-            for (let i = 0; i < count; i++) {
-                positions[i*3] = (Math.random() - 0.5) * 20;
-                positions[i*3+1] = (Math.random() - 0.5) * 5;
-                positions[i*3+2] = (Math.random() - 0.5) * 15 - 5;
-            }
-            particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            const particleMat = new THREE.PointsMaterial({ color: 0xf97316, size: 0.05, transparent: true });
-            const particleSys = new THREE.Points(particles, particleMat);
-            scene.add(particleSys);
-            activeObjects.push(particleSys);
-            
-            let time = 0;
-            function animate() {
-                time += 0.02;
-                const positions = geometry.attributes.position.array;
-                for (let i = 0; i < positions.length; i += 3) {
-                    const x = positions[i];
-                    const z = positions[i+2];
-                    positions[i+1] = Math.sin(x * 0.5 + time) * 0.3 + Math.cos(z * 0.5 + time) * 0.3;
-                }
-                geometry.attributes.position.needsUpdate = true;
-                particleSys.rotation.y += 0.002;
-            }
-            return animate;
-        }
-        
-        let currentAnimate = null;
-        
-        function changeBackground(bgNumber) {
-            currentBackground = bgNumber;
-            clearBackground();
-            if (currentAnimate) currentAnimate = null;
-            
-            let animateFunc;
-            switch(bgNumber) {
-                case 1: animateFunc = background1(); break;
-                case 2: animateFunc = background2(); break;
-                case 3: animateFunc = background3(); break;
-                case 4: animateFunc = background4(); break;
-                case 5: animateFunc = background5(); break;
-                default: animateFunc = background1();
-            }
-            
-            currentAnimate = animateFunc;
-            
-            // Update active class on buttons
-            document.querySelectorAll('.bg-option').forEach(btn => {
-                btn.classList.remove('active');
-                if(parseInt(btn.dataset.bg) === bgNumber) btn.classList.add('active');
-            });
-        }
-        
-        function startAnimation() {
-            function animate() {
-                requestAnimationFrame(animate);
-                if (currentAnimate) currentAnimate();
-                if (camera) {
-                    camera.lookAt(0, 0, 0);
-                    renderer.render(scene, camera);
-                }
-            }
-            animate();
-        }
-        
-        window.changeBackground = (num) => changeBackground(num);
-        
-        initThree();
-        changeBackground(1);
+        animate();
         
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
@@ -834,35 +752,46 @@
     </script>
     
     <script>
-        // ============ CONFIGURATION ============
+        // Contract Address
         const CONTRACT_ADDRESS = "0x003032948C69A055436038066D448C442049A2DA";
-        const CONTRACT_ABI = [
-            "event IncidentReported(address indexed reporter, string description, uint256 timestamp)",
-            "function reportIncident(string calldata _description) external"
-        ];
-
-        // ============ TRANSLATIONS ============
-        const translations = {
-            en: { home: "Home", app: "App", analytics: "Analytics", badges: "Badges", about: "About" },
-            es: { home: "Inicio", app: "Aplicación", analytics: "Análisis", badges: "Insignias", about: "Acerca de" },
-            hi: { home: "होम", app: "ऐप", analytics: "विश्लेषण", badges: "बैज", about: "के बारे में" }
-        };
+        const SNOWTRACE_URL = `https://testnet.snowtrace.io/address/${CONTRACT_ADDRESS}`;
         
-        let currentLang = 'en';
-        function changeLanguage(lang) {
-            currentLang = lang;
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if(translations[lang][key]) el.innerText = translations[lang][key];
-            });
+        // Generate QR Codes
+        function generateQRCodes() {
+            const qrContainer = document.getElementById('contractQR');
+            const aboutQrContainer = document.getElementById('aboutQR');
+            
+            if (qrContainer && typeof QRCode !== 'undefined') {
+                new QRCode(qrContainer, {
+                    text: SNOWTRACE_URL,
+                    width: 120,
+                    height: 120,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+            
+            if (aboutQrContainer && typeof QRCode !== 'undefined') {
+                new QRCode(aboutQrContainer, {
+                    text: SNOWTRACE_URL,
+                    width: 120,
+                    height: 120,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
         }
-        window.changeLanguage = changeLanguage;
         
-        // ============ CORE APPLICATION ============
-        let provider, signer, contract, userAddress;
-        let allIncidents = [];
-        let chart = null;
+        // Copy Contract Address Function
+        function copyContractAddress() {
+            navigator.clipboard.writeText(CONTRACT_ADDRESS);
+            showToast('✅ Contract address copied to clipboard!', 'success');
+        }
+        window.copyContractAddress = copyContractAddress;
         
+        // Show Toast
         function showToast(msg, type = 'info') {
             const toast = document.createElement('div');
             toast.className = 'toast';
@@ -871,9 +800,183 @@
             setTimeout(() => toast.remove(), 3000);
         }
         
+        // ============ TRANSLATIONS ============
+        const translations = {
+            en: {
+                navHome: "Home", navApp: "App", navAnalytics: "Analytics", navBadges: "Badges", navAbout: "About",
+                homeTitle: "🔒 SecureLog Enterprise", homeSubtitle: "Blockchain-Powered Security Incident Management with NFT Rewards",
+                feature1Title: "Immutable", feature1Desc: "Cannot be altered",
+                feature2Title: "Decentralized", feature2Desc: "No single point of failure",
+                feature3Title: "Timestamped", feature3Desc: "Proven timeline",
+                feature4Title: "NFT Badges", feature4Desc: "Rewards for top reporters",
+                whyTitle: "Why Blockchain for Security?", whyText: "Traditional logs can be tampered with. Blockchain ensures every incident is permanently recorded with cryptographic proof. Report critical incidents and earn NFT badges!",
+                appTitle: "Security Incident Log", appSubtitle: "Record and track security incidents on the blockchain",
+                connectTitle: "Connect Wallet", connectBtnText: "Connect Core Wallet",
+                reportTitle: "Report Incident", uploadBtnText: "Upload Evidence", submitBtnText: "SUBMIT INCIDENT",
+                logTitle: "Incident Log", refreshBtnText: "Refresh",
+                analyticsTitle: "Analytics Dashboard", analyticsSubtitle: "Real-time statistics and insights",
+                totalLabel: "Total Incidents", criticalLabel: "Critical", highLabel: "High", uniqueLabel: "Unique Reporters",
+                topReportersTitle: "🏆 Top Reporters",
+                badgesTitle: "NFT Badges", badgesSubtitle: "Earn badges by reporting critical security incidents!",
+                availableBadgesTitle: "🏅 Available Badges",
+                bronzeTitle: "Bronze Guardian", bronzeDesc: "Report 1 critical incident",
+                silverTitle: "Silver Sentinel", silverDesc: "Report 3 critical incidents",
+                goldTitle: "Gold Guardian", goldDesc: "Report 5 critical incidents",
+                yourBadgesTitle: "✨ Your Badges",
+                aboutTitle: "About SecureLog", aboutSubtitle: "Built for Hackathon | Web3 Security Innovation",
+                techTitle: "🛠️ Technology Stack", techText: "✅ Avalanche Fuji Testnet | ✅ Solidity Smart Contract | ✅ Core Wallet | ✅ 3D Background | ✅ ethers.js",
+                featuresTitle: "📞 Features", featuresText: "✅ Multi-Language Support | ✅ NFT Badge System | ✅ File Evidence Upload | ✅ Real-time Analytics | ✅ Dark/Light Mode | ✅ 3D Floating Cubes Background | ✅ QR Code for Contract Verification",
+                contractTitle: "🔗 Smart Contract", copyBtnText: "Copy Address",
+                footerText: "🔐 SecureLog | Built on Avalanche Fuji | Immutable Blockchain Security Logs | Report Incidents & Earn NFT Badges"
+            },
+            es: {
+                navHome: "Inicio", navApp: "Aplicación", navAnalytics: "Análisis", navBadges: "Insignias", navAbout: "Acerca de",
+                homeTitle: "🔒 SecureLog Empresarial", homeSubtitle: "Gestión de Incidentes de Seguridad con Blockchain y Recompensas NFT",
+                feature1Title: "Inmutable", feature1Desc: "No se puede alterar",
+                feature2Title: "Descentralizado", feature2Desc: "Sin punto único de fallo",
+                feature3Title: "Con Marca de Tiempo", feature3Desc: "Cronología probada",
+                feature4Title: "Insignias NFT", feature4Desc: "Recompensas para los mejores reporteros",
+                whyTitle: "¿Por qué Blockchain para Seguridad?", whyText: "Los registros tradicionales pueden ser manipulados. Blockchain asegura que cada incidente quede registrado permanentemente con prueba criptográfica. ¡Reporta incidentes críticos y gana insignias NFT!",
+                appTitle: "Registro de Incidentes de Seguridad", appSubtitle: "Registra y rastrea incidentes de seguridad en la blockchain",
+                connectTitle: "Conectar Wallet", connectBtnText: "Conectar Core Wallet",
+                reportTitle: "Reportar Incidente", uploadBtnText: "Subir Evidencia", submitBtnText: "ENVIAR INCIDENTE",
+                logTitle: "Registro de Incidentes", refreshBtnText: "Actualizar",
+                analyticsTitle: "Panel de Análisis", analyticsSubtitle: "Estadísticas e información en tiempo real",
+                totalLabel: "Total Incidentes", criticalLabel: "Críticos", highLabel: "Altos", uniqueLabel: "Reportantes Únicos",
+                topReportersTitle: "🏆 Mejores Reportantes",
+                badgesTitle: "Insignias NFT", badgesSubtitle: "¡Gana insignias reportando incidentes críticos de seguridad!",
+                availableBadgesTitle: "🏅 Insignias Disponibles",
+                bronzeTitle: "Guardián Bronce", bronzeDesc: "Reporta 1 incidente crítico",
+                silverTitle: "Centinela Plata", silverDesc: "Reporta 3 incidentes críticos",
+                goldTitle: "Guardián Oro", goldDesc: "Reporta 5 incidentes críticos",
+                yourBadgesTitle: "✨ Tus Insignias",
+                aboutTitle: "Acerca de SecureLog", aboutSubtitle: "Construido para Hackathon | Innovación en Seguridad Web3",
+                techTitle: "🛠️ Stack Tecnológico", techText: "✅ Avalanche Fuji Testnet | ✅ Contrato Inteligente Solidity | ✅ Core Wallet | ✅ Fondo 3D | ✅ ethers.js",
+                featuresTitle: "📞 Características", featuresText: "✅ Soporte Multi-Idioma | ✅ Sistema de Insignias NFT | ✅ Subida de Evidencias | ✅ Análisis en Tiempo Real | ✅ Modo Oscuro/Claro | ✅ Fondo 3D de Cubos Flotantes | ✅ Código QR para Verificación del Contrato",
+                contractTitle: "🔗 Contrato Inteligente", copyBtnText: "Copiar Dirección",
+                footerText: "🔐 SecureLog | Construido en Avalanche Fuji | Registros de Seguridad Inmutables en Blockchain | ¡Reporta Incidentes y Gana Insignias NFT!"
+            },
+            hi: {
+                navHome: "होम", navApp: "ऐप", navAnalytics: "विश्लेषण", navBadges: "बैज", navAbout: "के बारे में",
+                homeTitle: "🔒 सिक्योरलॉग एंटरप्राइज", homeSubtitle: "एनएफटी पुरस्कारों के साथ ब्लॉकचेन-संचालित सुरक्षा घटना प्रबंधन",
+                feature1Title: "अपरिवर्तनीय", feature1Desc: "बदला नहीं जा सकता",
+                feature2Title: "विकेंद्रीकृत", feature2Desc: "एकल विफलता बिंदु नहीं",
+                feature3Title: "समयांकित", feature3Desc: "सिद्ध समयरेखा",
+                feature4Title: "एनएफटी बैज", feature4Desc: "शीर्ष रिपोर्टरों के लिए पुरस्कार",
+                whyTitle: "सुरक्षा के लिए ब्लॉकचेन क्यों?", whyText: "पारंपरिक लॉग छेड़छाड़ किए जा सकते हैं। ब्लॉकचेन सुनिश्चित करता है कि हर घटना क्रिप्टोग्राफिक प्रमाण के साथ स्थायी रूप से रिकॉर्ड की जाती है। महत्वपूर्ण घटनाओं की रिपोर्ट करें और एनएफटी बैज अर्जित करें!",
+                appTitle: "सुरक्षा घटना लॉग", appSubtitle: "ब्लॉकचेन पर सुरक्षा घटनाओं को रिकॉर्ड और ट्रैक करें",
+                connectTitle: "वॉलेट कनेक्ट करें", connectBtnText: "कोर वॉलेट कनेक्ट करें",
+                reportTitle: "घटना रिपोर्ट करें", uploadBtnText: "सबूत अपलोड करें", submitBtnText: "घटना सबमिट करें",
+                logTitle: "घटना लॉग", refreshBtnText: "रिफ्रेश",
+                analyticsTitle: "एनालिटिक्स डैशबोर्ड", analyticsSubtitle: "वास्तविक समय के आंकड़े और जानकारी",
+                totalLabel: "कुल घटनाएं", criticalLabel: "गंभीर", highLabel: "उच्च", uniqueLabel: "अद्वितीय रिपोर्टर",
+                topReportersTitle: "🏆 शीर्ष रिपोर्टर",
+                badgesTitle: "एनएफटी बैज", badgesSubtitle: "महत्वपूर्ण सुरक्षा घटनाओं की रिपोर्ट करके बैज अर्जित करें!",
+                availableBadgesTitle: "🏅 उपलब्ध बैज",
+                bronzeTitle: "कांस्य गार्जियन", bronzeDesc: "1 गंभीर घटना रिपोर्ट करें",
+                silverTitle: "रजत सेंटिनल", silverDesc: "3 गंभीर घटनाएं रिपोर्ट करें",
+                goldTitle: "स्वर्ण गार्जियन", goldDesc: "5 गंभीर घटनाएं रिपोर्ट करें",
+                yourBadgesTitle: "✨ आपके बैज",
+                aboutTitle: "सिक्योरलॉग के बारे में", aboutSubtitle: "हैकाथॉन के लिए निर्मित | वेब3 सुरक्षा नवाचार",
+                techTitle: "🛠️ प्रौद्योगिकी स्टैक", techText: "✅ अवालांच फूजी टेस्टनेट | ✅ सॉलिडिटी स्मार्ट कॉन्ट्रैक्ट | ✅ कोर वॉलेट | ✅ 3डी बैकग्राउंड | ✅ ईथर्स.जेएस",
+                featuresTitle: "📞 विशेषताएं", featuresText: "✅ बहु-भाषा समर्थन | ✅ एनएफटी बैज प्रणाली | ✅ फाइल सबूत अपलोड | ✅ वास्तविक समय विश्लेषण | ✅ डार्क/लाइट मोड | ✅ 3डी फ्लोटिंग क्यूब्स बैकग्राउंड | ✅ कॉन्ट्रैक्ट सत्यापन के लिए क्यूआर कोड",
+                contractTitle: "🔗 स्मार्ट कॉन्ट्रैक्ट", copyBtnText: "पता कॉपी करें",
+                footerText: "🔐 सिक्योरलॉग | अवालांच फूजी पर निर्मित | अपरिवर्तनीय ब्लॉकचेन सुरक्षा लॉग | घटनाओं की रिपोर्ट करें और एनएफटी बैज अर्जित करें"
+            }
+        };
+
+        // Apply translations
+        function applyLanguage(lang) {
+            const t = translations[lang];
+            if (!t) return;
+            
+            document.getElementById('navHome').innerHTML = `<i class="ri-home-line"></i> ${t.navHome}`;
+            document.getElementById('navApp').innerHTML = `<i class="ri-apps-line"></i> ${t.navApp}`;
+            document.getElementById('navAnalytics').innerHTML = `<i class="ri-bar-chart-line"></i> ${t.navAnalytics}`;
+            document.getElementById('navBadges').innerHTML = `<i class="ri-medal-line"></i> ${t.navBadges}`;
+            document.getElementById('navAbout').innerHTML = `<i class="ri-information-line"></i> ${t.navAbout}`;
+            
+            document.getElementById('homeTitle').innerHTML = t.homeTitle;
+            document.getElementById('homeSubtitle').innerHTML = t.homeSubtitle;
+            document.getElementById('feature1Title').innerHTML = t.feature1Title;
+            document.getElementById('feature1Desc').innerHTML = t.feature1Desc;
+            document.getElementById('feature2Title').innerHTML = t.feature2Title;
+            document.getElementById('feature2Desc').innerHTML = t.feature2Desc;
+            document.getElementById('feature3Title').innerHTML = t.feature3Title;
+            document.getElementById('feature3Desc').innerHTML = t.feature3Desc;
+            document.getElementById('feature4Title').innerHTML = t.feature4Title;
+            document.getElementById('feature4Desc').innerHTML = t.feature4Desc;
+            document.getElementById('whyTitle').innerHTML = `<i class="ri-flashlight-line"></i> ${t.whyTitle}`;
+            document.getElementById('whyText').innerHTML = t.whyText;
+            
+            document.getElementById('appTitle').innerHTML = t.appTitle;
+            document.getElementById('appSubtitle').innerHTML = t.appSubtitle;
+            document.getElementById('connectTitle').innerHTML = `<i class="ri-wallet-line"></i> ${t.connectTitle}`;
+            document.getElementById('connectBtnText').innerHTML = t.connectBtnText;
+            document.getElementById('reportTitle').innerHTML = `<i class="ri-alert-line"></i> ${t.reportTitle}`;
+            document.getElementById('uploadBtnText').innerHTML = t.uploadBtnText;
+            document.getElementById('submitBtnText').innerHTML = t.submitBtnText;
+            document.getElementById('logTitle').innerHTML = `<i class="ri-list-check-2"></i> ${t.logTitle} <span id="incidentCount"></span>`;
+            document.getElementById('refreshBtnText').innerHTML = t.refreshBtnText;
+            
+            document.getElementById('analyticsTitle').innerHTML = `<i class="ri-bar-chart-2-line"></i> ${t.analyticsTitle}`;
+            document.getElementById('analyticsSubtitle').innerHTML = t.analyticsSubtitle;
+            document.getElementById('totalLabel').innerHTML = t.totalLabel;
+            document.getElementById('criticalLabel').innerHTML = t.criticalLabel;
+            document.getElementById('highLabel').innerHTML = t.highLabel;
+            document.getElementById('uniqueLabel').innerHTML = t.uniqueLabel;
+            document.getElementById('topReportersTitle').innerHTML = t.topReportersTitle;
+            
+            document.getElementById('badgesTitle').innerHTML = `<i class="ri-medal-line"></i> ${t.badgesTitle}`;
+            document.getElementById('badgesSubtitle').innerHTML = t.badgesSubtitle;
+            document.getElementById('availableBadgesTitle').innerHTML = t.availableBadgesTitle;
+            document.getElementById('bronzeTitle').innerHTML = t.bronzeTitle;
+            document.getElementById('bronzeDesc').innerHTML = t.bronzeDesc;
+            document.getElementById('silverTitle').innerHTML = t.silverTitle;
+            document.getElementById('silverDesc').innerHTML = t.silverDesc;
+            document.getElementById('goldTitle').innerHTML = t.goldTitle;
+            document.getElementById('goldDesc').innerHTML = t.goldDesc;
+            document.getElementById('yourBadgesTitle').innerHTML = t.yourBadgesTitle;
+            
+            document.getElementById('aboutTitle').innerHTML = `<i class="ri-information-line"></i> ${t.aboutTitle}`;
+            document.getElementById('aboutSubtitle').innerHTML = t.aboutSubtitle;
+            document.getElementById('techTitle').innerHTML = t.techTitle;
+            document.getElementById('techText').innerHTML = t.techText;
+            document.getElementById('featuresTitle').innerHTML = t.featuresTitle;
+            document.getElementById('featuresText').innerHTML = t.featuresText;
+            document.getElementById('contractTitle').innerHTML = t.contractTitle;
+            document.getElementById('copyBtnText').innerHTML = t.copyBtnText;
+            document.getElementById('footerText').innerHTML = t.footerText;
+        }
+
+        // Language selector
+        document.getElementById('languageSelect').addEventListener('change', function(e) {
+            applyLanguage(e.target.value);
+        });
+        
+        // ============ DARK/LIGHT MODE ============
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            const themeText = document.getElementById('themeText');
+            if (themeText) themeText.innerText = newTheme === 'dark' ? 'Light' : 'Dark';
+        }
+        window.toggleTheme = toggleTheme;
+        
+        // ============ CORE APPLICATION ============
+        const CONTRACT_ABI = [
+            "event IncidentReported(address indexed reporter, string description, uint256 timestamp)",
+            "function reportIncident(string calldata _description) external"
+        ];
+
+        let provider, signer, contract, userAddress;
+        let allIncidents = [];
+        let chart = null;
+        
         function formatTimestamp(ts) { return new Date(ts * 1000).toLocaleString(); }
         function shortenAddress(addr) { return addr ? addr.slice(0,6) + "..." + addr.slice(-4) : "Unknown"; }
-        window.copyAddress = () => { navigator.clipboard.writeText(CONTRACT_ADDRESS); showToast('Address copied!', 'success'); };
         
         let currentFileHash = '';
         document.getElementById('fileInput').addEventListener('change', async (e) => {
@@ -965,7 +1068,7 @@
                         borderRadius: 8
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#e2e8f0' } } } }
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: document.body.getAttribute('data-theme') === 'dark' ? '#e2e8f0' : '#0f172a' } } } }
             });
             
             const reporterCounts = {};
@@ -1055,13 +1158,17 @@
         }
         window.showSection = showSection;
         
-        function toggleTheme() {
-            const isDark = document.body.getAttribute('data-theme') !== 'light';
-            document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
-        }
-        window.toggleTheme = toggleTheme;
+        // Initialize QR codes after page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                generateQRCodes();
+            }, 500);
+        });
         
+        // Apply default language
+        applyLanguage('en');
         console.log('✅ App ready! Contract:', CONTRACT_ADDRESS);
+        console.log('✅ Snowtrace URL:', SNOWTRACE_URL);
     </script>
 </body>
 </html>
