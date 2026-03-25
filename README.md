@@ -5,7 +5,7 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## 🌟 Live Demo
-**🚀 [Visit SecureLog Live](https://securelog-dapp.vercel.app)**
+**🚀 [Visit SecureLog Live](https://securelog-app.vercel.app/)**
 
 ---
 
